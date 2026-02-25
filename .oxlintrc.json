@@ -1,0 +1,16 @@
+{
+  "$schema": "https://raw.githubusercontent.com/oxc-project/oxc/main/crates/oxc_linter/schemas/oxlintrc.schema.json",
+  "rules": {
+    "no-unused-vars": "error",
+    "no-console": "warn",
+    "eqeqeq": "error",
+    "prefer-const": "error"
+  },
+  "env": {
+    "browser": true,
+    "es2022": true
+  },
+  "globals": {
+    "localStorage": "readonly"
+  }
+}

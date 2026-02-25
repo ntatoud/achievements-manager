@@ -1,0 +1,62 @@
+@import "tailwindcss";
+
+@theme {
+  --font-mono: "Share Tech Mono", monospace;
+  --font-sans: "Space Grotesk", system-ui, sans-serif;
+
+  /* Surfaces */
+  --color-base:    #06080a;
+  --color-surface: #0b0f12;
+  --color-well:    #111820;
+
+  /* Borders */
+  --color-edge:        #1c2a38;
+  --color-edge-bright: #243447;
+
+  /* Accent — neon green */
+  --color-accent:     #3dffb0;
+  --color-accent-dim: #1a3d2e;
+  --color-accent-mid: #27a86d;
+
+  /* Text */
+  --color-body:   #8aa0b4;
+  --color-bright: #c8dcea;
+  --color-faint:  #3a5060;
+  --color-code:   #5bc8a0;
+}
+
+html, body, #root {
+  height: 100%;
+}
+
+body {
+  background-color: var(--color-base);
+  color: var(--color-body);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  overflow: hidden;
+}
+
+/* Subtle grid overlay */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(61, 255, 176, 0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(61, 255, 176, 0.025) 1px, transparent 1px);
+  background-size: 40px 40px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Progress bar shimmer */
+.prog-fill::after {
+  content: "";
+  position: absolute;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  width: 20px;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.35));
+}
