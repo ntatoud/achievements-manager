@@ -4,7 +4,7 @@
 
 [![npm](https://img.shields.io/npm/v/achievements)](https://www.npmjs.com/package/achievements)
 [![bundle size](https://img.shields.io/bundlephobia/minzip/achievements)](https://bundlephobia.com/package/achievements)
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](../../LICENSE)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](./LICENSE)
 [![TypeScript](https://img.shields.io/badge/TypeScript-first-3178c6)](https://www.typescriptlang.org/)
 
 ```sh
@@ -14,11 +14,9 @@ npm install achievements
 # bun add achievements
 ```
 
-The engine is a plain TypeScript object — no framework, no context, no magic. You configure it once with your definitions and call methods like `unlock()`, `setProgress()`, or `collectItem()` from wherever it makes sense in your app. Persistence, progress tracking, anti-cheat, and toast queuing are all handled internally.
+The engine is a plain TypeScript object. No framework, no context, no magic. You configure it once with your definitions and call methods like `unlock()`, `setProgress()`, or `collectItem()` from wherever it makes sense in your app. Persistence, progress tracking, anti-cheat, and toast queuing are all handled internally.
 
 **Looking for React bindings?** See [`achievements-react`](../react/README.md).
-
----
 
 ## Table of contents
 
@@ -32,8 +30,6 @@ The engine is a plain TypeScript object — no framework, no context, no magic. 
 - [Storage adapters](#storage-adapters)
 - [Anti-cheat & hash adapters](#anti-cheat--hash-adapters)
 - [TypeScript types](#typescript-types)
-
----
 
 ## Quick start
 
@@ -56,11 +52,9 @@ engine.unlock("first-visit");
 engine.incrementProgress("click-frenzy"); // auto-unlocks at 50
 ```
 
----
-
 ## Defining achievements
 
-Use `defineAchievements` to get **literal-type inference** on your IDs — the ID union is derived directly from your data, no manual type annotation needed.
+Use `defineAchievements` to get **literal-type inference** on your IDs. The ID union is derived directly from your data, no manual type annotation needed.
 
 ```ts
 import { defineAchievements } from "achievements";
@@ -87,8 +81,6 @@ export type AchievementId = (typeof definitions)[number]["id"];
 | `hidden`      | `boolean` | Hides the achievement entirely until unlocked. Default: `false`.          |
 | `hint`        | `boolean` | Hides only the description until unlocked. Default: `false`.              |
 
----
-
 ## Creating the engine
 
 ```ts
@@ -107,13 +99,11 @@ const engine = createAchievements({
 
 | Option             | Type                                 | Default                 | Description                                                                          |
 | ------------------ | ------------------------------------ | ----------------------- | ------------------------------------------------------------------------------------ |
-| `definitions`      | `ReadonlyArray<AchievementDef<TId>>` | —                       | Your achievement definitions.                                                        |
+| `definitions`      | `ReadonlyArray<AchievementDef<TId>>` | -                       | Your achievement definitions.                                                        |
 | `storage`          | `StorageAdapter`                     | `localStorageAdapter()` | Pluggable storage backend.                                                           |
 | `hash`             | `HashAdapter`                        | `fnv1aHashAdapter()`    | Hash function for tamper detection.                                                  |
-| `onUnlock`         | `(id: TId) => void`                  | —                       | Called synchronously when an achievement unlocks.                                    |
-| `onTamperDetected` | `(key: string) => void`              | —                       | Called when stored data fails its integrity check. The entry is wiped automatically. |
-
----
+| `onUnlock`         | `(id: TId) => void`                  | -                       | Called synchronously when an achievement unlocks.                                    |
+| `onTamperDetected` | `(key: string) => void`              | -                       | Called when stored data fails its integrity check. The entry is wiped automatically. |
 
 ## Engine API
 
@@ -127,8 +117,6 @@ Unlocks an achievement. No-op if already unlocked. Adds the ID to the toast queu
 engine.unlock("first-visit");
 ```
 
----
-
 #### `setProgress(id, value)`
 
 Sets progress to an absolute value. Clamped to `[0, maxProgress]`. Auto-unlocks when `value >= maxProgress`.
@@ -136,8 +124,6 @@ Sets progress to an absolute value. Clamped to `[0, maxProgress]`. Auto-unlocks 
 ```ts
 engine.setProgress("collector", 7);
 ```
-
----
 
 #### `incrementProgress(id)`
 
@@ -147,11 +133,9 @@ Shorthand for `setProgress(id, current + 1)`.
 engine.incrementProgress("collector");
 ```
 
----
-
 #### `collectItem(id, item)`
 
-Adds a unique string to the achievement's item set, then calls `setProgress(id, items.size)`. **Idempotent** — the same item can be passed multiple times safely.
+Adds a unique string to the achievement's item set, then calls `setProgress(id, items.size)`. **Idempotent**: the same item can be passed multiple times safely.
 
 ```ts
 engine.collectItem("explorer", "module-core");
@@ -159,18 +143,14 @@ engine.collectItem("explorer", "module-core"); // no-op
 engine.collectItem("explorer", "module-react"); // progress: 2
 ```
 
----
-
 #### `setMaxProgress(id, max)`
 
 Updates `maxProgress` at runtime (in-memory only, not persisted). Immediately re-evaluates current progress and auto-unlocks if the threshold is already met. Useful when the target is only known after a data fetch.
 
 ```ts
-// The definition has no maxProgress — we set it once we know the server count
+// The definition has no maxProgress. We set it once we know the server count.
 engine.setMaxProgress("full-coverage", serverNodeCount);
 ```
-
----
 
 #### `dismissToast(id)`
 
@@ -180,8 +160,6 @@ Removes an ID from the toast queue. Call this after your UI has finished showing
 engine.dismissToast("first-visit");
 ```
 
----
-
 #### `reset()`
 
 Wipes all in-memory state and removes all stored entries (unlocked set, progress, items, and their integrity hashes).
@@ -189,8 +167,6 @@ Wipes all in-memory state and removes all stored entries (unlocked set, progress
 ```ts
 engine.reset();
 ```
-
----
 
 ### Reads
 
@@ -208,17 +184,15 @@ All reads return **synchronous snapshots** of the current state.
 
 ```ts
 if (engine.isUnlocked("first-visit")) {
-  /* … */
+  /* ... */
 }
 
 const { unlockedIds, progress, toastQueue } = engine.getState();
 ```
 
----
-
 ### Reactivity
 
-#### `subscribe(listener)` → `() => void`
+#### `subscribe(listener)` -> `() => void`
 
 Registers a listener called after every mutation. Returns an unsubscribe function.
 
@@ -231,8 +205,6 @@ const unsubscribe = engine.subscribe((state) => {
 unsubscribe();
 ```
 
----
-
 ## Storage adapters
 
 ### `localStorageAdapter(prefix?)`
@@ -242,13 +214,11 @@ Reads and writes `window.localStorage`. Keys are namespaced with an optional pre
 ```ts
 import { localStorageAdapter } from "achievements";
 
-// Stored as "my-app:unlocked", "my-app:progress", …
+// Stored as "my-app:unlocked", "my-app:progress", etc.
 const storage = localStorageAdapter("my-app");
 ```
 
-SSR-safe — all `window` accesses are guarded.
-
----
+SSR-safe. All `window` accesses are guarded.
 
 ### `inMemoryAdapter()`
 
@@ -260,11 +230,9 @@ import { inMemoryAdapter } from "achievements";
 const storage = inMemoryAdapter();
 ```
 
----
-
 ### Custom adapter
 
-Implement `StorageAdapter` to plug in any backend — IndexedDB, a REST API, AsyncStorage, etc.
+Implement `StorageAdapter` to plug in any backend: IndexedDB, a REST API, AsyncStorage, etc.
 
 ```ts
 import type { StorageAdapter } from "achievements";
@@ -282,11 +250,9 @@ const myAdapter: StorageAdapter = {
 };
 ```
 
----
-
 ## Anti-cheat & hash adapters
 
-Every persisted entry is stored alongside an integrity hash. On hydration the hash is recomputed — if it doesn't match, `onTamperDetected` fires, the entry is wiped, and the engine starts from a clean slate.
+Every persisted entry is stored alongside an integrity hash. On hydration the hash is recomputed. If it doesn't match, `onTamperDetected` fires, the entry is wiped, and the engine starts from a clean slate.
 
 The default algorithm is **FNV-1a (32-bit)**: fast, synchronous, zero dependencies. To use a stronger function, pass a custom `HashAdapter`:
 
@@ -303,8 +269,6 @@ const engine = createAchievements({ definitions, hash: myHashAdapter });
 ```
 
 > **Note:** Hashes live in `localStorage` as plain strings, so a determined user can still forge them. This is a friction layer, not cryptographic security.
-
----
 
 ## TypeScript types
 

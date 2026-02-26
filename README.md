@@ -1,37 +1,31 @@
 # achievements
 
-> Type-safe achievement tracking for web apps — tiny core, optional React bindings.
+> Type-safe achievement tracking for web apps. Tiny core, optional React bindings.
 
 [![npm](https://img.shields.io/npm/v/achievements?label=achievements)](https://www.npmjs.com/package/achievements)
 [![npm](https://img.shields.io/npm/v/achievements-react?label=achievements-react)](https://www.npmjs.com/package/achievements-react)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](./LICENSE)
 [![TypeScript](https://img.shields.io/badge/TypeScript-first-3178c6)](https://www.typescriptlang.org/)
 
----
-
 **achievements** is a small, framework-agnostic library for adding achievements to any web application. You define your achievements once; the engine handles persistence, progress, auto-unlock, and notifications.
 
-- **Zero runtime dependencies** — the core ships nothing but your own code
-- **Type-safe IDs** — your ID union is inferred from definitions; typos are compile errors
-- **Auto-unlock** — progress-based achievements unlock themselves when the threshold is reached
-- **Anti-cheat** — stored data is integrity-checked on every load (FNV-1a by default, pluggable)
-- **Tamper response** — know immediately when localStorage has been edited
-- **Pluggable** — swap storage (localStorage, in-memory, your own) and hash adapters at will
-- **React-ready** — fine-grained hooks that only re-render the components that need to
-
----
+- **Zero runtime dependencies**: the core ships nothing but your own code
+- **Type-safe IDs**: your ID union is inferred from definitions; typos are compile errors
+- **Auto-unlock**: progress-based achievements unlock themselves when the threshold is reached
+- **Anti-cheat**: stored data is integrity-checked on every load (FNV-1a by default, pluggable)
+- **Tamper response**: know immediately when localStorage has been edited
+- **Pluggable**: swap storage (localStorage, in-memory, your own) and hash adapters at will
+- **React-ready**: fine-grained hooks that only re-render the components that need to
 
 ## Packages
 
 | Package | Description | Docs |
 |---|---|---|
-| [`achievements`](./packages/core) | Framework-agnostic core engine | [README →](./packages/core/README.md) |
-| [`achievements-react`](./packages/react) | React 19+ provider, hooks, factory | [README →](./packages/react/README.md) |
+| [`achievements`](./packages/core) | Framework-agnostic core engine | [README](./packages/core/README.md) |
+| [`achievements-react`](./packages/react) | React 19+ provider, hooks, factory | [README](./packages/react/README.md) |
 
 > **Which one do I need?**
-> If you're in a React app, install `achievements-react` — it includes the core. If you're working outside React (vanilla JS, a server, Svelte, Vue, …) install `achievements` directly.
-
----
+> If you're in a React app, install `achievements-react`, it includes the core. If you're working outside React (vanilla JS, a server, Svelte, Vue...) install `achievements` directly.
 
 ## Quick start
 
@@ -68,7 +62,7 @@ export const { engine, Provider, useAchievements, useIsUnlocked, useProgress } =
 // Wrap your app once
 <Provider><App /></Provider>
 
-// Use anywhere — fully typed, no <T> needed
+// Use anywhere, fully typed, no <T> needed
 const { unlock, incrementProgress } = useAchievements()
 const visited = useIsUnlocked('first-visit')
 const { progress, max } = useProgress('click-frenzy')
@@ -91,8 +85,6 @@ engine.unlock('first-visit')
 engine.subscribe((state) => render(state))
 ```
 
----
-
 ## Repository structure
 
 ```
@@ -105,8 +97,6 @@ engine.subscribe((state) => render(state))
 ├── pnpm-workspace.yaml
 └── package.json
 ```
-
----
 
 ## Development
 

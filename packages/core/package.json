@@ -1,9 +1,28 @@
 {
   "name": "achievements",
   "version": "0.2.0",
-  "description": "Framework-agnostic achievement tracking library",
+  "description": "Type-safe, framework-agnostic achievement tracking library for web applications",
+  "keywords": [
+    "achievements",
+    "framework-agnostic",
+    "gamification",
+    "progress",
+    "rewards",
+    "typescript",
+    "unlocks",
+    "vanilla"
+  ],
+  "homepage": "https://github.com/ntatoud/achievements-manager/tree/main/packages/core#readme",
+  "license": "MIT",
+  "author": "Noe TATOUD <noe.tatoud@gmail.com>",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ntatoud/achievements-manager",
+    "directory": "packages/core"
+  },
   "files": [
-    "dist"
+    "dist",
+    "LICENSE"
   ],
   "type": "module",
   "main": "./dist/index.js",
