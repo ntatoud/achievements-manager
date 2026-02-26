@@ -1,0 +1,16 @@
+pre-commit:
+  parallel: true
+  jobs:
+    - name: format
+      run: pnpm format:check
+
+    - name: lint
+      run: pnpm lint
+
+pre-push:
+  jobs:
+    - name: typecheck
+      run: pnpm typecheck
+
+    - name: build
+      run: pnpm build

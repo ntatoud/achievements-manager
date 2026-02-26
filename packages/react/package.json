@@ -2,30 +2,33 @@
   "name": "achievements-react",
   "version": "0.1.0",
   "description": "React bindings for the achievements library",
+  "files": [
+    "dist"
+  ],
   "type": "module",
-  "exports": {
-    ".": {
-      "import": "./dist/index.js",
-      "types": "./dist/index.d.ts"
-    }
-  },
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
-  "files": ["dist"],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
   "scripts": {
-    "build": "tsc -p tsconfig.build.json",
-    "dev": "tsc -p tsconfig.build.json --watch",
+    "build": "rolldown -c && tsc -p tsconfig.build.json",
+    "dev": "rolldown -c --watch",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "achievements": "workspace:*"
   },
-  "peerDependencies": {
-    "react": ">=19.0.0"
-  },
   "devDependencies": {
     "@types/react": "catalog:",
     "react": "catalog:",
+    "rolldown": "catalog:",
     "typescript": "catalog:"
+  },
+  "peerDependencies": {
+    "react": ">=19.0.0"
   }
 }
