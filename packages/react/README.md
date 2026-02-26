@@ -1,43 +1,33 @@
 # achievements-react
 
-React 19+ bindings for the [`achievements`](https://www.npmjs.com/package/achievements) library. Provides a factory function, a context provider, and a set of fine-grained hooks that only re-render the components that actually need to update.
+> React 19+ bindings for `achievements` — one factory call, fully typed hooks, zero boilerplate.
+
+[![npm](https://img.shields.io/npm/v/achievements-react)](https://www.npmjs.com/package/achievements-react)
+[![bundle size](https://img.shields.io/bundlephobia/minzip/achievements-react)](https://bundlephobia.com/package/achievements-react)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](../../LICENSE)
+[![TypeScript](https://img.shields.io/badge/TypeScript-first-3178c6)](https://www.typescriptlang.org/)
 
 ```sh
 npm install achievements-react
-# achievements is a peer dependency — it is pulled in automatically
+# pnpm add achievements-react
+# yarn add achievements-react
+# bun add achievements-react
 ```
 
-**Peer requirements:** React ≥ 19.0.0.
+**Peer requirements:** React ≥ 19.0.0. The `achievements` core is bundled — no separate install needed.
 
 ---
 
-## Table of contents
+## How it works
 
-- [The factory pattern](#the-factory-pattern)
-- [Provider](#provider)
-- [Hooks](#hooks)
-  - [useAchievements](#useachievements)
-  - [useIsUnlocked](#useisunlocked)
-  - [useProgress](#useprogress)
-  - [useUnlockedCount](#useunlockedcount)
-  - [useAchievementToast](#useachievementtoast)
-  - [useTamperDetected](#usetamperdetected)
-- [Using the engine directly](#using-the-engine-directly)
-- [Using without the factory](#using-without-the-factory)
-- [Re-exports from core](#re-exports-from-core)
-
----
-
-## The factory pattern
-
-The recommended setup is `createAchievements()`, which creates the engine and returns hooks that are already bound to your ID type. You never have to write `useHook<AchievementId>()` again.
+Call `createAchievements()` once in a module-level file. It returns a pre-wired `Provider`, an `engine`, and hooks that are already bound to your ID type — no generic annotations needed at the call site.
 
 ```ts
 // src/achievements.ts
 import { createAchievements, defineAchievements, localStorageAdapter } from "achievements-react";
 
 const definitions = defineAchievements([
-  { id: "first-visit", label: "First Visit", description: "Open the app for the first time." },
+  { id: "first-visit", label: "First Visit", description: "Open the app." },
   { id: "click-frenzy", label: "Click Frenzy", description: "Click 50 times.", maxProgress: 50 },
   { id: "night-owl", label: "Night Owl", description: "Use the app after midnight.", hidden: true },
 ]);
@@ -56,14 +46,60 @@ export const {
 } = createAchievements<AchievementId>({
   definitions,
   storage: localStorageAdapter("my-app"),
-  onUnlock: (id) => console.log("Unlocked:", id),
-  onTamperDetected: (key) => console.warn("Tamper detected:", key),
 });
 ```
 
-### `createAchievements` config
+```tsx
+// src/main.tsx — wrap your app once
+import { Provider } from "./achievements";
 
-All options from the core `createAchievements` are supported:
+createRoot(document.getElementById("root")!).render(
+  <Provider>
+    <App />
+  </Provider>,
+);
+```
+
+```tsx
+// src/components/Example.tsx — use anywhere, fully typed
+import { useAchievements, useIsUnlocked, useProgress } from "./achievements";
+
+function Example() {
+  const { unlock, incrementProgress } = useAchievements();
+  const visited = useIsUnlocked("first-visit"); // boolean
+  const { progress, max } = useProgress("click-frenzy"); // { progress: number, max: number }
+
+  return (
+    <>
+      <button onClick={() => unlock("first-visit")}>Visit</button>
+      <button onClick={() => incrementProgress("click-frenzy")}>
+        Click ({progress}/{max})
+      </button>
+    </>
+  );
+}
+```
+
+---
+
+## Table of contents
+
+- [createAchievements config](#createachievements-config)
+- [Provider](#provider)
+- [Hooks](#hooks)
+  - [useAchievements](#useachievements)
+  - [useIsUnlocked](#useisunlocked)
+  - [useProgress](#useprogress)
+  - [useUnlockedCount](#useunlockedcount)
+  - [useAchievementToast](#useachievementtoast)
+  - [useTamperDetected](#usetamperdetected)
+- [Using the engine directly](#using-the-engine-directly)
+- [Without the factory](#without-the-factory)
+- [Re-exports from core](#re-exports-from-core)
+
+---
+
+## `createAchievements` config
 
 | Option             | Type                                 | Default                 | Description                                        |
 | ------------------ | ------------------------------------ | ----------------------- | -------------------------------------------------- |
@@ -77,57 +113,54 @@ All options from the core `createAchievements` are supported:
 
 ## Provider
 
-Wrap your application (or the subtree that uses achievements) with the `Provider` returned by `createAchievements`. It requires no props — the engine is already bound.
+The `Provider` returned by `createAchievements` is pre-wired to the engine — no props needed.
 
 ```tsx
-// src/main.tsx
 import { Provider } from "./achievements";
 
-createRoot(document.getElementById("root")!).render(
-  <Provider>
-    <App />
-  </Provider>,
-);
+export default function RootLayout({ children }) {
+  return <Provider>{children}</Provider>;
+}
 ```
 
-If you prefer a manual setup, `AchievementsProvider` accepts an `engine` prop directly (see [Using without the factory](#using-without-the-factory)).
+If you need direct control over the engine lifecycle, `AchievementsProvider` accepts an explicit `engine` prop — see [Without the factory](#without-the-factory).
 
 ---
 
 ## Hooks
 
-All hooks must be called inside the `Provider`. Each hook subscribes only to the slice of state it needs, so a progress update on achievement A won't re-render a component that only cares about achievement B.
+All hooks must be called inside `Provider`. Each one subscribes only to the slice of state it needs, so a progress change on achievement A won't re-render a component that only watches achievement B.
 
 ---
 
 ### `useAchievements`
 
-Returns the full engine object for imperative calls. Use this to trigger mutations.
+Returns the engine for imperative calls. The source of truth for mutations.
 
 ```tsx
 import { useAchievements } from "./achievements";
 
-function MyButton() {
-  const { unlock, incrementProgress, collectItem } = useAchievements();
+function Controls() {
+  const { unlock, incrementProgress, collectItem, reset } = useAchievements();
 
-  return <button onClick={() => unlock("first-visit")}>Start</button>;
+  return <button onClick={() => unlock("first-visit")}>Trigger</button>;
 }
 ```
 
-**Available methods on the engine:** `unlock`, `setProgress`, `incrementProgress`, `collectItem`, `setMaxProgress`, `dismissToast`, `reset`, `isUnlocked`, `getProgress`, `getItems`, `getUnlocked`, `getUnlockedCount`, `getState`, `getDefinition`, `subscribe`.
+All engine methods are available: `unlock`, `setProgress`, `incrementProgress`, `collectItem`, `setMaxProgress`, `dismissToast`, `reset`, `isUnlocked`, `getProgress`, `getItems`, `getUnlocked`, `getUnlockedCount`, `getState`, `getDefinition`, `subscribe`.
 
 ---
 
 ### `useIsUnlocked`
 
-Reactive boolean. Re-renders only when _this_ achievement's lock state changes.
+Reactive boolean. Re-renders only when **this** achievement's lock state changes.
 
 ```tsx
 import { useIsUnlocked } from "./achievements";
 
 function Badge() {
   const unlocked = useIsUnlocked("first-visit");
-  return <span>{unlocked ? "✓" : "○"}</span>;
+  return <span className={unlocked ? "gold" : "grey"}>★</span>;
 }
 ```
 
@@ -135,37 +168,32 @@ function Badge() {
 
 ### `useProgress`
 
-Returns the current `progress` and `max` for a progress-based achievement. Re-renders only when _this_ achievement's progress changes.
+Reactive `{ progress, max }`. Re-renders only when **this** achievement's progress changes.
 
 ```tsx
 import { useProgress } from "./achievements";
 
-function ClickCounter() {
+function ProgressBar() {
   const { progress, max } = useProgress("click-frenzy");
-  // max comes from the definition's maxProgress field
+  // max is undefined for achievements without maxProgress
 
-  return (
-    <p>
-      {progress} / {max} clicks
-    </p>
-  );
+  return <progress value={progress} max={max} />;
 }
 ```
 
-| Return field | Type                  | Description                                                                      |
-| ------------ | --------------------- | -------------------------------------------------------------------------------- |
-| `progress`   | `number`              | Current progress value (0 if not set).                                           |
-| `max`        | `number \| undefined` | `maxProgress` from the definition, or `undefined` if not a progress achievement. |
+| Field      | Type                  | Description                                        |
+| ---------- | --------------------- | -------------------------------------------------- |
+| `progress` | `number`              | Current progress (0 if unset).                     |
+| `max`      | `number \| undefined` | `maxProgress` from the definition, or `undefined`. |
 
 ---
 
 ### `useUnlockedCount`
 
-Reactive count of unlocked achievements. Re-renders only when the count changes.
+Reactive count of unlocked achievements. Re-renders only when the total changes.
 
 ```tsx
 import { useUnlockedCount } from "./achievements";
-import { definitions } from "./achievements";
 
 function Score() {
   const count = useUnlockedCount();
@@ -181,55 +209,66 @@ function Score() {
 
 ### `useAchievementToast`
 
-Returns the toast queue and a `dismiss` function. The queue is ordered oldest-first; display `queue[0]` and call `dismiss(queue[0])` when the notification closes.
+Returns the toast queue (oldest-first) and a `dismiss` function. Display `queue[0]`, then call `dismiss(queue[0])` once the notification closes.
 
 ```tsx
 import { useEffect } from "react";
-import { useAchievementToast } from "./achievements";
-import { engine } from "./achievements";
+import { useAchievementToast, engine } from "./achievements";
+
+const DISPLAY_MS = 3000;
 
 function Toast() {
   const { queue, dismiss } = useAchievementToast();
-  const currentId = queue[0];
-  const def = currentId ? engine.getDefinition(currentId) : undefined;
+  const id = queue[0];
+  const def = id ? engine.getDefinition(id) : undefined;
 
   useEffect(() => {
-    if (!currentId) return;
-    const timer = setTimeout(() => dismiss(currentId), 3000);
-    return () => clearTimeout(timer);
-  }, [currentId, dismiss]);
+    if (!id) return;
+    const t = setTimeout(() => dismiss(id), DISPLAY_MS);
+    return () => clearTimeout(t);
+  }, [id, dismiss]);
 
-  if (!currentId || !def) return null;
+  if (!id || !def) return null;
 
   return (
-    <div className="toast">
+    <div role="status" className="toast">
       <strong>{def.label}</strong>
       <p>{def.description}</p>
-      <button onClick={() => dismiss(currentId)}>✕</button>
+      <button onClick={() => dismiss(id)}>✕</button>
     </div>
   );
 }
 ```
 
-| Return field | Type                 | Description                                      |
-| ------------ | -------------------- | ------------------------------------------------ |
-| `queue`      | `ReadonlyArray<TId>` | IDs waiting to be shown, oldest first.           |
-| `dismiss`    | `(id: TId) => void`  | Remove an ID from the queue after displaying it. |
+| Field     | Type                 | Description                                      |
+| --------- | -------------------- | ------------------------------------------------ |
+| `queue`   | `ReadonlyArray<TId>` | IDs waiting to be shown, oldest first.           |
+| `dismiss` | `(id: TId) => void`  | Remove an ID from the queue after displaying it. |
 
 ---
 
 ### `useTamperDetected`
 
-Returns the storage key that failed its integrity check, or `null` if none. Handles detection at both module-load time (before React mounts) and at runtime.
+Returns the storage key that failed its integrity check, or `null` if clean. Handles detection both at module-load time (before React mounts) and at runtime.
 
 ```tsx
 import { useTamperDetected, Provider } from "./achievements";
 
 export default function App() {
+  // Must be called OUTSIDE Provider — it catches tamper events
+  // that fire during engine init, before any component mounts.
   const tamperKey = useTamperDetected();
 
   if (tamperKey !== null) {
-    return <div>Storage tampered: {tamperKey}. Please clear your data.</div>;
+    return (
+      <div>
+        <h1>Cheating detected</h1>
+        <p>
+          Modified key: <code>{tamperKey}</code>
+        </p>
+        <button onClick={() => window.location.reload()}>Reload</button>
+      </div>
+    );
   }
 
   return (
@@ -240,35 +279,33 @@ export default function App() {
 }
 ```
 
-**Note:** `useTamperDetected` must be called _outside_ the `Provider` (at the root level, before the provider renders) so that it can catch tampering that is detected during engine initialization at module load time.
-
 ---
 
 ## Using the engine directly
 
-The `engine` object returned by `createAchievements` is the raw core engine. You can call it outside React — for example, in response to a network event or a keyboard shortcut handler:
+The `engine` export is the raw core engine. You can call it anywhere — inside event listeners, WebSocket handlers, or plain utility functions — no hooks required.
 
 ```ts
 import { engine } from "./achievements";
 
-// Anywhere in your app, no hooks needed
+// Respond to external events
 socket.on("level-complete", () => engine.unlock("level-complete"));
 
-// Read synchronously
-const isUnlocked = engine.isUnlocked("first-visit");
+// Read synchronously, outside React
+const alreadyVisited = engine.isUnlocked("first-visit");
 ```
 
 ---
 
-## Using without the factory
+## Without the factory
 
-If you prefer to manage the engine lifecycle yourself, use `AchievementsProvider` and the generic hooks directly:
+If you prefer to manage the engine lifecycle yourself, use `AchievementsProvider` and the unbound hooks directly. You'll need to pass the type parameter manually at each call site.
 
 ```tsx
 import { createAchievements } from "achievements";
 import { AchievementsProvider, useAchievements, useIsUnlocked } from "achievements-react";
 
-const engine = createAchievements({ definitions });
+const engine = createAchievements<AchievementId>({ definitions });
 
 function Root() {
   return (
@@ -277,11 +314,8 @@ function Root() {
     </AchievementsProvider>
   );
 }
-```
 
-The generic hooks accept a type parameter in this case:
-
-```tsx
+// In components — note the explicit <AchievementId>
 const { unlock } = useAchievements<AchievementId>();
 const unlocked = useIsUnlocked<AchievementId>("first-visit");
 ```
@@ -290,27 +324,29 @@ const unlocked = useIsUnlocked<AchievementId>("first-visit");
 
 ## Re-exports from core
 
-`achievements-react` re-exports everything from the `achievements` core package so you only need a single import in most files:
+`achievements-react` re-exports everything from `achievements`, so you rarely need to import from two packages:
 
 ```ts
 import {
-  // from achievements-react
+  // Factory & components
   createAchievements,
   AchievementsProvider,
+
+  // Hooks
   useAchievements,
   useIsUnlocked,
   useProgress,
   useAchievementToast,
   useUnlockedCount,
+  useTamperDetected,
 
-  // re-exported from achievements core
+  // Re-exported from core
   defineAchievements,
-  createAchievements as createAchievementsEngine,
   localStorageAdapter,
   inMemoryAdapter,
   fnv1aHashAdapter,
 
-  // types
+  // Types
   type AchievementDef,
   type AchievementState,
   type AchievementEngine,

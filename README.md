@@ -1,117 +1,80 @@
 # achievements
 
-A TypeScript achievement tracking library for web applications. Type-safe and framework-agnostic at the core, with optional React bindings that make integration a one-liner.
+> Type-safe achievement tracking for web apps — tiny core, optional React bindings.
 
-- **[`achievements`](./packages/core)** — core engine with no framework dependency
-- **[`achievements-react`](./packages/react)** — React provider, hooks, and factory built on top of the core
-
----
-
-## Table of contents
-
-- [Overview](#overview)
-- [Packages](#packages)
-- [Quick start](#quick-start)
-- [Repository structure](#repository-structure)
-- [Development](#development)
-- [Releasing](#releasing)
+[![npm](https://img.shields.io/npm/v/achievements?label=achievements)](https://www.npmjs.com/package/achievements)
+[![npm](https://img.shields.io/npm/v/achievements-react?label=achievements-react)](https://www.npmjs.com/package/achievements-react)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](./LICENSE)
+[![TypeScript](https://img.shields.io/badge/TypeScript-first-3178c6)](https://www.typescriptlang.org/)
 
 ---
 
-## Overview
+**achievements** is a small, framework-agnostic library for adding achievements to any web application. You define your achievements once; the engine handles persistence, progress, auto-unlock, and notifications.
 
-The library revolves around an **engine** that you configure once with your achievement definitions, then drive from anywhere in your application:
-
-```
-define achievements → create engine → call unlock / setProgress / collectItem → React re-renders automatically
-```
-
-Key features:
-
-- **Type-safe IDs** — the engine is generic over your literal ID union; passing a typo is a compile error.
-- **Progress tracking** — achievements with a `maxProgress` auto-unlock when progress reaches the threshold.
-- **Item collection** — idempotent `collectItem()` builds a persistent `Set`; progress mirrors its size.
-- **Anti-cheat** — stored data is integrity-checked via a pluggable hash adapter (FNV-1a by default).
-- **Pluggable storage** — `localStorage`, in-memory, or any adapter you write.
-- **Toast queue** — the engine queues newly unlocked IDs so your UI can pop notifications one at a time.
+- **Zero runtime dependencies** — the core ships nothing but your own code
+- **Type-safe IDs** — your ID union is inferred from definitions; typos are compile errors
+- **Auto-unlock** — progress-based achievements unlock themselves when the threshold is reached
+- **Anti-cheat** — stored data is integrity-checked on every load (FNV-1a by default, pluggable)
+- **Tamper response** — know immediately when localStorage has been edited
+- **Pluggable** — swap storage (localStorage, in-memory, your own) and hash adapters at will
+- **React-ready** — fine-grained hooks that only re-render the components that need to
 
 ---
 
 ## Packages
 
-| Package | Version | Description |
+| Package | Description | Docs |
 |---|---|---|
-| [`achievements`](./packages/core) | 0.2.0 | Framework-agnostic core engine |
-| [`achievements-react`](./packages/react) | 0.2.0 | React 19+ bindings and factory |
+| [`achievements`](./packages/core) | Framework-agnostic core engine | [README →](./packages/core/README.md) |
+| [`achievements-react`](./packages/react) | React 19+ provider, hooks, factory | [README →](./packages/react/README.md) |
+
+> **Which one do I need?**
+> If you're in a React app, install `achievements-react` — it includes the core. If you're working outside React (vanilla JS, a server, Svelte, Vue, …) install `achievements` directly.
 
 ---
 
 ## Quick start
 
-### With React (recommended)
-
 ```sh
+# React
 npm install achievements-react
-# achievements is a peer dependency and is pulled in automatically
+
+# Vanilla / framework-agnostic
+npm install achievements
 ```
+
+### React
 
 ```ts
 // src/achievements.ts
-import { createAchievements, localStorageAdapter } from 'achievements-react'
+import { createAchievements, defineAchievements, localStorageAdapter } from 'achievements-react'
 
-export const {
-  engine,
-  Provider,
-  useAchievements,
-  useIsUnlocked,
-  useProgress,
-  useAchievementToast,
-  useUnlockedCount,
-} = createAchievements({
-  definitions: [
-    { id: 'first-visit', label: 'First Visit', description: 'Open the app for the first time.' },
-    { id: 'click-frenzy', label: 'Click Frenzy', description: 'Click 50 times.', maxProgress: 50 },
-  ],
-  storage: localStorageAdapter('my-app'),
-})
+const definitions = defineAchievements([
+  { id: 'first-visit',  label: 'First Visit',  description: 'Open the app.'     },
+  { id: 'click-frenzy', label: 'Click Frenzy', description: 'Click 50 times.',
+    maxProgress: 50 },
+])
+
+export type AchievementId = typeof definitions[number]['id']
+
+export const { engine, Provider, useAchievements, useIsUnlocked, useProgress } =
+  createAchievements<AchievementId>({
+    definitions,
+    storage: localStorageAdapter('my-app'),
+  })
 ```
 
 ```tsx
-// src/main.tsx
-import { Provider } from './achievements'
+// Wrap your app once
+<Provider><App /></Provider>
 
-createRoot(document.getElementById('root')!).render(
-  <Provider>
-    <App />
-  </Provider>
-)
+// Use anywhere — fully typed, no <T> needed
+const { unlock, incrementProgress } = useAchievements()
+const visited = useIsUnlocked('first-visit')
+const { progress, max } = useProgress('click-frenzy')
 ```
 
-```tsx
-// src/components/MyComponent.tsx
-import { useAchievements, useIsUnlocked, useProgress } from './achievements'
-
-function MyComponent() {
-  const { unlock, incrementProgress } = useAchievements()
-  const visited = useIsUnlocked('first-visit')
-  const { progress, max } = useProgress('click-frenzy')
-
-  return (
-    <>
-      <button onClick={() => unlock('first-visit')}>Visit</button>
-      <button onClick={() => incrementProgress('click-frenzy')}>
-        Click ({progress}/{max})
-      </button>
-    </>
-  )
-}
-```
-
-### Without React (vanilla / Node)
-
-```sh
-npm install achievements
-```
+### Vanilla / framework-agnostic
 
 ```ts
 import { createAchievements, localStorageAdapter } from 'achievements'
@@ -121,10 +84,11 @@ const engine = createAchievements({
     { id: 'first-visit', label: 'First Visit', description: 'Open the app.' },
   ],
   storage: localStorageAdapter('my-app'),
+  onUnlock: (id) => showNotification(id),
 })
 
-engine.subscribe((state) => console.log('unlocked:', [...state.unlockedIds]))
 engine.unlock('first-visit')
+engine.subscribe((state) => render(state))
 ```
 
 ---
@@ -134,10 +98,10 @@ engine.unlock('first-visit')
 ```
 .
 ├── packages/
-│   ├── core/           # `achievements` npm package
-│   └── react/          # `achievements-react` npm package
+│   ├── core/          # `achievements` — zero-dependency engine
+│   └── react/         # `achievements-react` — React 19+ bindings
 ├── apps/
-│   └── example/        # Interactive Vite + React demo app
+│   └── example/       # Interactive Vite + React demo
 ├── pnpm-workspace.yaml
 └── package.json
 ```
@@ -146,8 +110,6 @@ engine.unlock('first-visit')
 
 ## Development
 
-This repo uses [pnpm](https://pnpm.io/) workspaces.
-
 ```sh
 pnpm install        # install all dependencies
 pnpm build          # build all packages
@@ -155,14 +117,10 @@ pnpm test           # run all tests
 pnpm typecheck      # type-check all packages
 pnpm lint           # lint with oxlint
 pnpm format         # format with oxfmt
-pnpm dev:example    # start the interactive demo app
+pnpm dev:example    # start the interactive demo at localhost:5173
 ```
 
----
-
 ## Releasing
-
-Versions are managed per-package. The release scripts build all packages before publishing.
 
 ```sh
 pnpm release:patch   # bump patch, build, publish
