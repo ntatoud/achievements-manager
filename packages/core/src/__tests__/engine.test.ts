@@ -1,7 +1,6 @@
 import { describe, it, expect, vi } from "vitest";
 import { createAchievements } from "../engine";
 import { inMemoryAdapter } from "../adapters";
-import type { AchievementDef } from "../types";
 
 const definitions = [
   { id: "basic", label: "Basic", description: "A basic achievement" },

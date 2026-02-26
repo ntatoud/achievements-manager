@@ -1,10 +1,5 @@
 import { localStorageAdapter } from "./adapters";
-import type {
-  AchievementDef,
-  AchievementEngine,
-  AchievementState,
-  StorageAdapter,
-} from "./types";
+import type { AchievementDef, AchievementEngine, AchievementState, StorageAdapter } from "./types";
 
 type Config<TId extends string> = {
   definitions: ReadonlyArray<AchievementDef<TId>>;
@@ -29,18 +24,14 @@ export function createAchievements<TId extends string>(
 
   try {
     const rawUnlocked = storage.get(STORAGE_KEY_UNLOCKED);
-    unlockedIds = new Set<TId>(
-      rawUnlocked ? (JSON.parse(rawUnlocked) as TId[]) : [],
-    );
+    unlockedIds = new Set<TId>(rawUnlocked ? (JSON.parse(rawUnlocked) as TId[]) : []);
   } catch {
     unlockedIds = new Set<TId>();
   }
 
   try {
     const rawProgress = storage.get(STORAGE_KEY_PROGRESS);
-    progress = rawProgress
-      ? (JSON.parse(rawProgress) as Record<string, number>)
-      : {};
+    progress = rawProgress ? (JSON.parse(rawProgress) as Record<string, number>) : {};
   } catch {
     progress = {};
   }
@@ -137,9 +128,7 @@ export function createAchievements<TId extends string>(
     return config.definitions.find((d) => d.id === id);
   }
 
-  function subscribe(
-    listener: (state: AchievementState<TId>) => void,
-  ): () => void {
+  function subscribe(listener: (state: AchievementState<TId>) => void): () => void {
     listeners.add(listener);
     return () => {
       listeners.delete(listener);

@@ -1,21 +1,28 @@
 {
   "name": "achievements-monorepo",
   "private": true,
+  "packageManager": "pnpm@10.26.0",
   "scripts": {
     "build": "pnpm -r build",
+    "typecheck": "pnpm -r typecheck",
     "test": "pnpm -r test",
     "lint": "oxlint packages",
     "lint:fix": "oxlint --fix packages",
-    "format": "oxfmt packages",
-    "format:check": "oxfmt --check packages",
+    "format": "oxfmt packages '!**/dist/**'",
+    "format:check": "oxfmt --check packages '!**/dist/**'",
     "dev:example": "pnpm --filter example dev"
   },
   "pnpm": {
-    "onlyBuiltDependencies": ["esbuild"]
+    "onlyBuiltDependencies": [
+      "esbuild",
+      "lefthook"
+    ]
   },
   "devDependencies": {
+    "lefthook": "2.1.1",
     "oxfmt": "0.35.0",
     "oxlint": "1.50.0",
+    "rolldown": "1.0.0-rc.5",
     "typescript": "catalog:"
   }
 }
