@@ -1,6 +1,7 @@
 {
   "name": "achievements-monorepo",
   "private": true,
+  "packageManager": "pnpm@10.26.0",
   "scripts": {
     "build": "pnpm -r build",
     "typecheck": "pnpm -r typecheck",
