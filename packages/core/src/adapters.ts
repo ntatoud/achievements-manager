@@ -1,4 +1,4 @@
-import type { StorageAdapter } from "./types";
+import type { HashAdapter, StorageAdapter } from "./types";
 
 export function localStorageAdapter(prefix?: string): StorageAdapter {
   const k = (key: string) => (prefix ? `${prefix}:${key}` : key);
@@ -26,6 +26,23 @@ export function localStorageAdapter(prefix?: string): StorageAdapter {
       } catch {
         // Storage unavailable — silently ignore
       }
+    },
+  };
+}
+
+/**
+ * Default hash adapter using FNV-1a (32-bit).
+ * Fast, synchronous, and sufficient for tamper detection.
+ */
+export function fnv1aHashAdapter(): HashAdapter {
+  return {
+    hash(data: string): string {
+      let h = 2166136261; // FNV-1a offset basis
+      for (let i = 0; i < data.length; i++) {
+        h ^= data.charCodeAt(i);
+        h = Math.imul(h, 16777619) >>> 0; // FNV prime, keep 32-bit unsigned
+      }
+      return h.toString(16);
     },
   };
 }
