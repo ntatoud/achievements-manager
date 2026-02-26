@@ -1,6 +1,6 @@
 {
   "name": "achievements",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Type-safe, framework-agnostic achievement tracking library for web applications",
   "keywords": [
     "achievements",

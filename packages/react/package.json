@@ -1,6 +1,6 @@
 {
   "name": "achievements-react",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "React 19+ bindings for the achievements library with hooks and factory",
   "keywords": [
     "achievements",
