@@ -24,6 +24,11 @@ export function useProgress<TId extends string>(
   return { progress, max };
 }
 
+/** Reactive count of unlocked achievements — re-renders only when the count changes. */
+export function useUnlockedCount<TId extends string>(): number {
+  return useEngineState<TId, number>((s) => s.unlockedIds.size);
+}
+
 /** Reactive toast queue + dismiss helper. */
 export function useAchievementToast<TId extends string>() {
   const engine = useEngine<TId>();

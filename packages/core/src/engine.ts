@@ -129,6 +129,10 @@ export function createAchievements<TId extends string>(
     return new Set(unlockedIds);
   }
 
+  function getUnlockedCount(): number {
+    return unlockedIds.size;
+  }
+
   function getDefinition(id: TId): AchievementDef<TId> | undefined {
     return config.definitions.find((d) => d.id === id);
   }
@@ -151,6 +155,7 @@ export function createAchievements<TId extends string>(
     isUnlocked,
     getProgress,
     getUnlocked,
+    getUnlockedCount,
     getState,
     getDefinition,
     subscribe,
