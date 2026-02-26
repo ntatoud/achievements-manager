@@ -50,6 +50,16 @@ export type AchievementEngine<TId extends string> = {
   setProgress(id: TId, value: number): void;
   /** Increment progress by 1. Auto-unlocks if the new value >= maxProgress. */
   incrementProgress(id: TId): void;
+  /**
+   * Add a unique string item to this achievement's tracked set.
+   * Calls setProgress(id, items.size) after insertion. Idempotent.
+   */
+  collectItem(id: TId, item: string): void;
+  /**
+   * Update the maxProgress for an achievement at runtime.
+   * Enables auto-unlock when progress reaches the new max.
+   */
+  setMaxProgress(id: TId, max: number): void;
   /** Remove an ID from the toast queue (call after displaying the notification). */
   dismissToast(id: TId): void;
   /** Wipe all state from memory and storage. */
@@ -58,6 +68,8 @@ export type AchievementEngine<TId extends string> = {
   // --- Reads (synchronous snapshots) ---
   isUnlocked(id: TId): boolean;
   getProgress(id: TId): number;
+  /** Return the set of items collected for this achievement via collectItem(). */
+  getItems(id: TId): ReadonlySet<string>;
   getUnlocked(): ReadonlySet<TId>;
   getUnlockedCount(): number;
   getState(): AchievementState<TId>;

@@ -10,6 +10,7 @@ type Config<TId extends string> = {
 
 const STORAGE_KEY_UNLOCKED = "unlocked";
 const STORAGE_KEY_PROGRESS = "progress";
+const STORAGE_KEY_ITEMS = "items";
 
 export function createAchievements<TId extends string>(
   config: Config<TId>,
@@ -20,6 +21,9 @@ export function createAchievements<TId extends string>(
   // --- Initialization ---
   let unlockedIds: Set<TId>;
   let progress: Record<string, number>;
+  let items: Record<string, Set<string>>;
+  // Runtime-only overrides for maxProgress (not persisted)
+  const runtimeMaxProgress: Record<string, number> = {};
   let toastQueue: Array<TId>;
 
   try {
@@ -34,6 +38,14 @@ export function createAchievements<TId extends string>(
     progress = rawProgress ? (JSON.parse(rawProgress) as Record<string, number>) : {};
   } catch {
     progress = {};
+  }
+
+  try {
+    const rawItems = storage.get(STORAGE_KEY_ITEMS);
+    const parsed = rawItems ? (JSON.parse(rawItems) as Record<string, string[]>) : {};
+    items = Object.fromEntries(Object.entries(parsed).map(([k, v]) => [k, new Set(v)]));
+  } catch {
+    items = {};
   }
 
   toastQueue = [];
@@ -61,6 +73,11 @@ export function createAchievements<TId extends string>(
     storage.set(STORAGE_KEY_PROGRESS, JSON.stringify(progress));
   }
 
+  function persistItems(): void {
+    const serializable = Object.fromEntries(Object.entries(items).map(([k, v]) => [k, [...v]]));
+    storage.set(STORAGE_KEY_ITEMS, JSON.stringify(serializable));
+  }
+
   // --- Public API ---
 
   function unlock(id: TId): void {
@@ -74,19 +91,37 @@ export function createAchievements<TId extends string>(
 
   function setProgress(id: TId, value: number): void {
     const def = config.definitions.find((d) => d.id === id);
-    if (def === undefined || def.maxProgress === undefined) return;
+    if (def === undefined) return;
+    const effectiveMax = runtimeMaxProgress[id] ?? def.maxProgress;
+    if (effectiveMax === undefined) return;
 
-    const clamped = Math.max(0, Math.min(value, def.maxProgress));
+    const clamped = Math.max(0, Math.min(value, effectiveMax));
     progress[id] = clamped;
     persistProgress();
 
-    if (clamped >= def.maxProgress && !unlockedIds.has(id)) {
+    if (clamped >= effectiveMax && !unlockedIds.has(id)) {
       // unlock() calls notify() internally, so we return to avoid double-notify
       unlock(id);
       return;
     }
 
     notify();
+  }
+
+  function collectItem(id: TId, item: string): void {
+    if (!items[id]) items[id] = new Set();
+    const set = items[id];
+    const prevSize = set.size;
+    set.add(item);
+    if (set.size === prevSize) return; // idempotent — item already present
+    persistItems();
+    setProgress(id, set.size);
+  }
+
+  function setMaxProgress(id: TId, max: number): void {
+    runtimeMaxProgress[id] = max;
+    // Re-evaluate current progress against the new max (triggers auto-unlock if met)
+    setProgress(id, getProgress(id));
   }
 
   function incrementProgress(id: TId): void {
@@ -102,9 +137,11 @@ export function createAchievements<TId extends string>(
   function reset(): void {
     unlockedIds = new Set<TId>();
     progress = {};
+    items = {};
     toastQueue = [];
     storage.remove(STORAGE_KEY_UNLOCKED);
     storage.remove(STORAGE_KEY_PROGRESS);
+    storage.remove(STORAGE_KEY_ITEMS);
     notify();
   }
 
@@ -114,6 +151,10 @@ export function createAchievements<TId extends string>(
 
   function getProgress(id: TId): number {
     return progress[id] ?? 0;
+  }
+
+  function getItems(id: TId): ReadonlySet<string> {
+    return new Set(items[id]);
   }
 
   function getUnlocked(): ReadonlySet<TId> {
@@ -139,10 +180,13 @@ export function createAchievements<TId extends string>(
     unlock,
     setProgress,
     incrementProgress,
+    collectItem,
+    setMaxProgress,
     dismissToast,
     reset,
     isUnlocked,
     getProgress,
+    getItems,
     getUnlocked,
     getUnlockedCount,
     getState,

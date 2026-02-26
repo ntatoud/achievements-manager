@@ -33,6 +33,18 @@ export const definitions = defineAchievements([
     description: "Accessed all system modules.",
     maxProgress: 3,
   },
+  {
+    id: "scanner",
+    label: "Network Scanner",
+    description: "Scanned 4 unique network nodes.",
+    maxProgress: 4,
+  },
+  {
+    id: "full-coverage",
+    label: "Full Coverage",
+    description: "Scanned every node in the network.",
+    // No static maxProgress — set at runtime via setMaxProgress
+  },
 ]);
 
 export type AchievementId = (typeof definitions)[number]["id"];
