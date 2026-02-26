@@ -1,5 +1,7 @@
 import { useAchievements, useUnlockedCount, definitions } from "../achievements";
 import { AchievementCard } from "./AchievementCard";
+import { ScrollArea } from "./ui/scroll-area";
+import { Button } from "./ui/button";
 
 export function Sidebar() {
   const { reset } = useAchievements();
@@ -18,23 +20,21 @@ export function Sidebar() {
       </header>
 
       {/* Card list */}
-      <div className="flex-1 overflow-y-auto p-3 flex flex-col gap-2 [scrollbar-width:thin] [scrollbar-color:var(--color-edge)_transparent]">
-        {definitions.map((def) => (
-          <AchievementCard
-            key={def.id}
-            def={def}
-          />
-        ))}
-      </div>
+      <ScrollArea className="flex-1">
+        <div className="p-3 flex flex-col gap-2">
+          {definitions.map((def) => (
+            <AchievementCard key={def.id} def={def} />
+          ))}
+        </div>
+      </ScrollArea>
 
       {/* Reset — engine.reset() clears all storage, so the next page load
           will see first-visit as not unlocked, correctly treating it as a new session. */}
-      <button
-        className="shrink-0 m-3 px-4 py-2.5 bg-transparent border border-edge rounded text-faint font-mono text-[12px] tracking-wide cursor-pointer transition-colors hover:border-edge-bright hover:text-body"
-        onClick={reset}
-      >
-        ⟳&ensp;reset all
-      </button>
+      <div className="shrink-0 m-3">
+        <Button variant="ghost" size="sm" className="w-full" onClick={reset}>
+          ⟳&ensp;reset all
+        </Button>
+      </div>
     </aside>
   );
 }

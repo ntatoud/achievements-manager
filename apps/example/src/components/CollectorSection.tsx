@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { engine, useAchievements, useIsUnlocked, useProgress } from "../achievements";
+import { Button } from "./ui/button";
 
 const INITIAL_NODES = [
   { id: "node-alpha", label: "alpha", desc: "Primary relay" },
@@ -64,23 +65,17 @@ export function CollectorSection() {
           const done = scanned.has(node.id);
           const allDone = coverageUnlocked;
           return (
-            <button
+            <Button
               key={node.id}
-              className={[
-                "p-4 flex flex-col gap-1.5 text-left rounded-xl border transition-all duration-150",
-                done || allDone
-                  ? "border-accent-mid bg-accent-dim cursor-default"
-                  : "border-edge bg-surface cursor-pointer hover:border-edge-bright hover:bg-well",
-              ].join(" ")}
+              variant={done || allDone ? "accent" : "outline"}
+              className="h-auto p-4 flex flex-col items-start gap-1.5"
               onClick={() => scan(node.id)}
               disabled={done || allDone}
             >
-              <span
-                className={`font-mono text-[13px] ${done ? "text-accent" : "text-bright"}`}
-              >
-                {node.label}
+              <span className="font-mono text-[13px]">{node.label}</span>
+              <span className="text-[11px] text-faint leading-snug font-normal">
+                {node.desc}
               </span>
-              <span className="text-[11px] text-faint leading-snug">{node.desc}</span>
               <span
                 className={`font-mono text-[10px] mt-1 tracking-wide ${
                   done ? "text-accent-mid" : "text-faint"
@@ -88,7 +83,7 @@ export function CollectorSection() {
               >
                 {done ? "✓ scanned" : "→ scan"}
               </span>
-            </button>
+            </Button>
           );
         })}
       </div>
@@ -102,12 +97,9 @@ export function CollectorSection() {
         </p>
 
         {!expanded && !coverageUnlocked && (
-          <button
-            className="font-mono text-[11px] text-faint border border-edge rounded px-2.5 py-1 hover:text-bright hover:border-edge-bright transition-all duration-150 cursor-pointer"
-            onClick={() => setExpanded(true)}
-          >
+          <Button variant="ghost" size="sm" onClick={() => setExpanded(true)}>
             + expand network
-          </button>
+          </Button>
         )}
       </div>
 

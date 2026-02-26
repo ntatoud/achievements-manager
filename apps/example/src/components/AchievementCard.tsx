@@ -1,7 +1,10 @@
 import type { AchievementDef } from "achievements";
 import { useIsUnlocked, useProgress } from "../achievements";
 import type { AchievementId } from "../achievements";
-import { ProgressBar } from "./ProgressBar";
+import { Progress } from "./ui/progress";
+import { Badge } from "./ui/badge";
+import { Card } from "./ui/card";
+import { cn } from "@/lib/utils";
 
 type Props = { def: AchievementDef<AchievementId> };
 
@@ -11,14 +14,14 @@ export function AchievementCard({ def }: Props) {
   const secret = !!def.hidden && !unlocked;
 
   return (
-    <article
-      className={[
-        "p-3.5 rounded-xl border transition-all duration-300",
+    <Card
+      className={cn(
+        "p-3.5 transition-all duration-300",
         unlocked
-          ? "bg-surface border-accent-mid shadow-[0_0_12px_rgba(61,255,176,0.07)]"
-          : "bg-surface border-edge",
-        secret ? "opacity-55" : "",
-      ].join(" ")}
+          ? "border-accent-mid shadow-[0_0_12px_rgba(61,255,176,0.07)]"
+          : "border-edge",
+        secret && "opacity-55"
+      )}
     >
       {/* Top row: glyph · id · badge */}
       <div className="flex items-center gap-2 mb-2">
@@ -32,16 +35,9 @@ export function AchievementCard({ def }: Props) {
         >
           {secret ? "CLASSIFIED" : def.id}
         </code>
-        <span
-          className={[
-            "font-mono text-[9px] tracking-widest px-1.5 py-0.5 rounded border whitespace-nowrap",
-            unlocked
-              ? "bg-accent-dim text-accent border-accent-mid"
-              : "bg-well text-faint border-edge",
-          ].join(" ")}
-        >
+        <Badge variant={unlocked ? "unlocked" : "default"}>
           {unlocked ? "UNLOCKED" : "LOCKED"}
-        </span>
+        </Badge>
       </div>
 
       {/* Label */}
@@ -65,12 +61,12 @@ export function AchievementCard({ def }: Props) {
       {/* Progress bar */}
       {max !== undefined && !secret && (
         <div className="flex items-center gap-2.5 mt-2.5">
-          <ProgressBar value={progress} max={max} className="flex-1" />
+          <Progress value={(progress / max) * 100} className="flex-1 h-[3px]" />
           <span className="font-mono text-[10px] text-faint whitespace-nowrap">
             {progress}&thinsp;/&thinsp;{max}
           </span>
         </div>
       )}
-    </article>
+    </Card>
   );
 }

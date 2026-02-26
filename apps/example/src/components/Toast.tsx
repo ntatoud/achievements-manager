@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 import { engine, useAchievementToast } from "../achievements";
+import { Card } from "./ui/card";
+import { Button } from "./ui/button";
 
 const DISPLAY_MS = 3200;
 const FADE_MS = 400;
@@ -32,31 +34,35 @@ export function Toast() {
   if (!currentId || !def) return null;
 
   return (
-    <div
+    <Card
       className={[
-        "fixed bottom-7 right-7 w-[300px] z-50",
-        "bg-well border border-accent-mid rounded-xl p-4",
+        "fixed bottom-7 right-7 w-[300px] z-50 p-4",
+        "border-accent-mid",
         "shadow-[0_0_0_1px_rgba(61,255,176,0.08),0_24px_48px_rgba(0,0,0,0.5),0_0_32px_rgba(61,255,176,0.06)]",
         "transition-all duration-300",
-        visible ? "opacity-100 translate-y-0 scale-100" : "opacity-0 translate-y-3 scale-[0.97]",
+        visible
+          ? "opacity-100 translate-y-0 scale-100"
+          : "opacity-0 translate-y-3 scale-[0.97]",
       ].join(" ")}
     >
       <div className="flex items-center justify-between mb-2">
         <span className="font-mono text-[10px] tracking-widest text-accent">
           // achievement unlocked
         </span>
-        <button
-          className="text-faint text-[12px] leading-none px-0.5 transition-colors hover:text-body"
+        <Button
+          variant="ghost"
+          size="icon"
+          className="size-5 rounded text-[12px] border-transparent"
           onClick={close}
         >
           ✕
-        </button>
+        </Button>
       </div>
 
       <div className="text-[15px] font-semibold tracking-tight text-bright mb-1">
         {def.label}
       </div>
       <div className="text-[12px] leading-relaxed text-body">{def.description}</div>
-    </div>
+    </Card>
   );
 }
