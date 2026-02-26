@@ -3,9 +3,9 @@
  * IDs are inferred as literal types, so you can derive the ID union with:
  *   type AchievementId = typeof definitions[number]["id"]
  */
-export function defineAchievements<
-  const T extends ReadonlyArray<AchievementDef<string>>,
->(definitions: T): T {
+export function defineAchievements<const T extends ReadonlyArray<AchievementDef<string>>>(
+  definitions: T,
+): T {
   return definitions;
 }
 
