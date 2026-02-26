@@ -10,7 +10,11 @@
     "lint:fix": "oxlint --fix packages",
     "format": "oxfmt packages '!**/dist/**'",
     "format:check": "oxfmt --check packages '!**/dist/**'",
-    "dev:example": "pnpm --filter example dev"
+    "dev:example": "pnpm --filter example dev",
+    "release": "pnpm build && pnpm -r --filter './packages/**' publish --access public",
+    "release:patch": "pnpm -r --filter './packages/**' exec npm version patch --no-git-tag-version && pnpm build && pnpm -r --filter './packages/**' publish --access public",
+    "release:minor": "pnpm -r --filter './packages/**' exec npm version minor --no-git-tag-version && pnpm build && pnpm -r --filter './packages/**' publish --access public",
+    "release:major": "pnpm -r --filter './packages/**' exec npm version major --no-git-tag-version && pnpm build && pnpm -r --filter './packages/**' publish --access public"
   },
   "pnpm": {
     "onlyBuiltDependencies": [
