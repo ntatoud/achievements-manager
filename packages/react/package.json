@@ -1,9 +1,28 @@
 {
   "name": "achievements-react",
   "version": "0.2.0",
-  "description": "React bindings for the achievements library",
+  "description": "React 19+ bindings for the achievements library with hooks and factory",
+  "keywords": [
+    "achievements",
+    "gamification",
+    "hooks",
+    "progress",
+    "react",
+    "rewards",
+    "typescript",
+    "unlocks"
+  ],
+  "homepage": "https://github.com/ntatoud/achievements-manager/tree/main/packages/react#readme",
+  "license": "MIT",
+  "author": "Noe TATOUD <noe.tatoud@gmail.com>",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ntatoud/achievements-manager",
+    "directory": "packages/react"
+  },
   "files": [
-    "dist"
+    "dist",
+    "LICENSE"
   ],
   "type": "module",
   "main": "./dist/index.js",
