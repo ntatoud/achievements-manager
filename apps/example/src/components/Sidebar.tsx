@@ -1,5 +1,4 @@
-import { useAchievements, definitions } from "../achievements";
-import { useUnlockedCount } from "../hooks/useUnlockedCount";
+import { useAchievements, useUnlockedCount, definitions } from "../achievements";
 import { AchievementCard } from "./AchievementCard";
 
 export function Sidebar() {

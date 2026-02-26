@@ -1,3 +1,14 @@
+/**
+ * Define an array of achievement definitions with full type inference.
+ * IDs are inferred as literal types, so you can derive the ID union with:
+ *   type AchievementId = typeof definitions[number]["id"]
+ */
+export function defineAchievements<
+  const T extends ReadonlyArray<AchievementDef<string>>,
+>(definitions: T): T {
+  return definitions;
+}
+
 // Achievement definition provided by the consumer
 export type AchievementDef<TId extends string> = {
   id: TId;
@@ -48,6 +59,7 @@ export type AchievementEngine<TId extends string> = {
   isUnlocked(id: TId): boolean;
   getProgress(id: TId): number;
   getUnlocked(): ReadonlySet<TId>;
+  getUnlockedCount(): number;
   getState(): AchievementState<TId>;
   getDefinition(id: TId): AchievementDef<TId> | undefined;
 

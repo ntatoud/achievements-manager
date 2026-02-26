@@ -7,10 +7,11 @@ import {
   useIsUnlocked as useIsUnlockedHook,
   useProgress as useProgressHook,
   useAchievementToast as useAchievementToastHook,
+  useUnlockedCount as useUnlockedCountHook,
 } from "./hooks";
 
 type Config<TId extends string> = {
-  definitions: Array<AchievementDef<TId>>;
+  definitions: ReadonlyArray<AchievementDef<TId>>;
   storage?: StorageAdapter;
   onUnlock?: (id: TId) => void;
 };
@@ -52,5 +53,8 @@ export function createAchievements<TId extends string>(config: Config<TId>) {
 
     /** Reactive `{ queue, dismiss }` for toast notifications. */
     useAchievementToast: () => useAchievementToastHook<TId>(),
+
+    /** Reactive count of unlocked achievements — re-renders only when the count changes. */
+    useUnlockedCount: () => useUnlockedCountHook<TId>(),
   };
 }
