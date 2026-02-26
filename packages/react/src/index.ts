@@ -22,4 +22,5 @@ export type {
   AchievementEngine,
   StorageAdapter,
   HashAdapter,
+  AchievementsConfig,
 } from "achievements";

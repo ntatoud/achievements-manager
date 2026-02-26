@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import type { ReactNode } from "react";
 import { createAchievements as coreCreate } from "achievements";
-import type { AchievementDef, HashAdapter, StorageAdapter } from "achievements";
+import type { AchievementsConfig } from "achievements";
 import { AchievementsProvider } from "./context";
 import {
   useAchievements as useAchievementsHook,
@@ -10,15 +10,6 @@ import {
   useAchievementToast as useAchievementToastHook,
   useUnlockedCount as useUnlockedCountHook,
 } from "./hooks";
-
-type Config<TId extends string> = {
-  definitions: ReadonlyArray<AchievementDef<TId>>;
-  storage?: StorageAdapter;
-  hash?: HashAdapter;
-  onUnlock?: (id: TId) => void;
-  /** Called when stored data fails its integrity check. For React consumers, prefer useTamperDetected(). */
-  onTamperDetected?: (key: string) => void;
-};
 
 /**
  * Factory that creates the engine and returns hooks already bound to TId.
@@ -33,7 +24,7 @@ type Config<TId extends string> = {
  * import { useIsUnlocked } from './achievements'
  * const unlocked = useIsUnlocked('night-owl') // fully typed, no <T> needed
  */
-export function createAchievements<TId extends string>(config: Config<TId>) {
+export function createAchievements<TId extends string>(config: AchievementsConfig<TId>) {
   // Buffer the first tamper key so useTamperDetected() works even when tamper is
   // detected at module load time, before any React component has mounted.
   let _tamperKey: string | null = null;

@@ -8,3 +8,4 @@ export type {
   StorageAdapter,
   HashAdapter,
 } from "./types";
+export type { Config as AchievementsConfig } from "./engine";

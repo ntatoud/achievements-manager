@@ -7,7 +7,7 @@ import type {
   StorageAdapter,
 } from "./types";
 
-type Config<TId extends string> = {
+export type Config<TId extends string> = {
   definitions: ReadonlyArray<AchievementDef<TId>>;
   storage?: StorageAdapter;
   /** Pluggable hash function for tamper detection. Defaults to FNV-1a (32-bit). */
@@ -63,16 +63,26 @@ export function createAchievements<TId extends string>(
     storage.set(key + HASH_SUFFIX, computeHash(value));
   }
 
+  function removeData(key: string): void {
+    storage.remove(key);
+    storage.remove(key + HASH_SUFFIX);
+  }
+
   // --- Hydration ---
 
+  /**
+   * Load a persisted field from storage, verifying its integrity hash.
+   * If the hash is present but doesn't match, the data has been tampered with:
+   * onTamperDetected is fired, the corrupted entry is wiped, and the fallback
+   * value is returned so the engine starts from a clean state.
+   */
   function hydrateField<T>(key: string, parse: (raw: string) => T, fallback: T): T {
     try {
       const raw = storage.get(key);
       if (!raw) return fallback;
       if (!verifyStoredIntegrity(key)) {
         config.onTamperDetected?.(key);
-        storage.remove(key);
-        storage.remove(key + HASH_SUFFIX);
+        removeData(key);
         return fallback;
       }
       return parse(raw);
@@ -200,12 +210,9 @@ export function createAchievements<TId extends string>(
     progress = {};
     items = {};
     toastQueue = [];
-    storage.remove(STORAGE_KEY_UNLOCKED);
-    storage.remove(STORAGE_KEY_UNLOCKED + HASH_SUFFIX);
-    storage.remove(STORAGE_KEY_PROGRESS);
-    storage.remove(STORAGE_KEY_PROGRESS + HASH_SUFFIX);
-    storage.remove(STORAGE_KEY_ITEMS);
-    storage.remove(STORAGE_KEY_ITEMS + HASH_SUFFIX);
+    removeData(STORAGE_KEY_UNLOCKED);
+    removeData(STORAGE_KEY_PROGRESS);
+    removeData(STORAGE_KEY_ITEMS);
     notify();
   }
 
