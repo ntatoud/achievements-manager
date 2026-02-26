@@ -57,6 +57,7 @@ export const {
   useProgress,
   useAchievementToast,
   useUnlockedCount,
+  useTamperDetected,
 } = createAchievements<AchievementId>({
   definitions,
   storage: localStorageAdapter("achievements-demo"),

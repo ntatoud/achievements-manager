@@ -41,6 +41,11 @@ export type StorageAdapter = {
   remove(key: string): void;
 };
 
+// Pluggable hash function for tamper detection
+export type HashAdapter = {
+  hash(data: string): string;
+};
+
 // The object returned by createAchievements()
 export type AchievementEngine<TId extends string> = {
   // --- Writes ---

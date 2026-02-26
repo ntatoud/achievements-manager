@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { engine, Provider, useAchievements } from "./achievements";
+import { engine, Provider, useAchievements, useTamperDetected } from "./achievements";
 import { Sidebar } from "./components/Sidebar";
 import { AppHeader } from "./components/AppHeader";
 import { ClickFrenzySection } from "./components/ClickFrenzySection";
@@ -7,6 +7,7 @@ import { ExplorerSection } from "./components/ExplorerSection";
 import { ManualSection } from "./components/ManualSection";
 import { CollectorSection } from "./components/CollectorSection";
 import { Toast } from "./components/Toast";
+import { JumpscarePage } from "./components/JumpscarePage";
 
 // ─── Session init (runs once on mount) ───────────────────────────────────────
 
@@ -50,6 +51,12 @@ function Layout() {
 // ─── Root ─────────────────────────────────────────────────────────────────────
 
 export default function App() {
+  const tamperKey = useTamperDetected();
+
+  if (tamperKey !== null) {
+    return <JumpscarePage tamperKey={tamperKey} />;
+  }
+
   return (
     <Provider>
       <SessionInit />

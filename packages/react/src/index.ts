@@ -14,10 +14,12 @@ export {
   createAchievements as createAchievementsEngine,
   localStorageAdapter,
   inMemoryAdapter,
+  fnv1aHashAdapter,
 } from "achievements";
 export type {
   AchievementDef,
   AchievementState,
   AchievementEngine,
   StorageAdapter,
+  HashAdapter,
 } from "achievements";

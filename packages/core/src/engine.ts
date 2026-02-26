@@ -1,21 +1,33 @@
-import { localStorageAdapter } from "./adapters";
-import type { AchievementDef, AchievementEngine, AchievementState, StorageAdapter } from "./types";
+import { fnv1aHashAdapter, localStorageAdapter } from "./adapters";
+import type {
+  AchievementDef,
+  AchievementEngine,
+  AchievementState,
+  HashAdapter,
+  StorageAdapter,
+} from "./types";
 
 type Config<TId extends string> = {
   definitions: ReadonlyArray<AchievementDef<TId>>;
   storage?: StorageAdapter;
+  /** Pluggable hash function for tamper detection. Defaults to FNV-1a (32-bit). */
+  hash?: HashAdapter;
   /** Called synchronously immediately after an achievement is unlocked. */
   onUnlock?: (id: TId) => void;
+  /** Called when stored data fails its integrity check. */
+  onTamperDetected?: (key: string) => void;
 };
 
 const STORAGE_KEY_UNLOCKED = "unlocked";
 const STORAGE_KEY_PROGRESS = "progress";
 const STORAGE_KEY_ITEMS = "items";
+const HASH_SUFFIX = ":hash";
 
 export function createAchievements<TId extends string>(
   config: Config<TId>,
 ): AchievementEngine<TId> {
   const storage = config.storage ?? localStorageAdapter();
+  const hashAdapter = config.hash ?? fnv1aHashAdapter();
   const listeners = new Set<(state: AchievementState<TId>) => void>();
 
   // --- Initialization ---
@@ -26,27 +38,69 @@ export function createAchievements<TId extends string>(
   const runtimeMaxProgress: Record<string, number> = {};
   let toastQueue: Array<TId>;
 
-  try {
-    const rawUnlocked = storage.get(STORAGE_KEY_UNLOCKED);
-    unlockedIds = new Set<TId>(rawUnlocked ? (JSON.parse(rawUnlocked) as TId[]) : []);
-  } catch {
-    unlockedIds = new Set<TId>();
+  // --- Hash helpers ---
+
+  function computeHash(data: string): string {
+    return hashAdapter.hash(data);
   }
 
-  try {
-    const rawProgress = storage.get(STORAGE_KEY_PROGRESS);
-    progress = rawProgress ? (JSON.parse(rawProgress) as Record<string, number>) : {};
-  } catch {
-    progress = {};
+  /**
+   * Returns true if stored data passes integrity check.
+   * If no hash is stored (e.g. pre-anti-cheat data), the data is trusted as-is.
+   */
+  function verifyStoredIntegrity(key: string): boolean {
+    const data = storage.get(key);
+    const storedHash = storage.get(key + HASH_SUFFIX);
+    // No hash stored yet (backward-compatible) — trust the data
+    if (storedHash === null) return true;
+    // Hash exists but data was removed — something is wrong
+    if (data === null) return false;
+    return storedHash === computeHash(data);
   }
 
-  try {
-    const rawItems = storage.get(STORAGE_KEY_ITEMS);
-    const parsed = rawItems ? (JSON.parse(rawItems) as Record<string, string[]>) : {};
-    items = Object.fromEntries(Object.entries(parsed).map(([k, v]) => [k, new Set(v)]));
-  } catch {
-    items = {};
+  function persistData(key: string, value: string): void {
+    storage.set(key, value);
+    storage.set(key + HASH_SUFFIX, computeHash(value));
   }
+
+  // --- Hydration ---
+
+  function hydrateField<T>(key: string, parse: (raw: string) => T, fallback: T): T {
+    try {
+      const raw = storage.get(key);
+      if (!raw) return fallback;
+      if (!verifyStoredIntegrity(key)) {
+        config.onTamperDetected?.(key);
+        storage.remove(key);
+        storage.remove(key + HASH_SUFFIX);
+        return fallback;
+      }
+      return parse(raw);
+    } catch {
+      return fallback;
+    }
+  }
+
+  unlockedIds = hydrateField(
+    STORAGE_KEY_UNLOCKED,
+    (raw) => new Set<TId>(JSON.parse(raw) as TId[]),
+    new Set<TId>(),
+  );
+
+  progress = hydrateField(
+    STORAGE_KEY_PROGRESS,
+    (raw) => JSON.parse(raw) as Record<string, number>,
+    {},
+  );
+
+  items = hydrateField(
+    STORAGE_KEY_ITEMS,
+    (raw) => {
+      const parsed = JSON.parse(raw) as Record<string, string[]>;
+      return Object.fromEntries(Object.entries(parsed).map(([k, v]) => [k, new Set(v)]));
+    },
+    {},
+  );
 
   toastQueue = [];
 
@@ -66,22 +120,29 @@ export function createAchievements<TId extends string>(
   }
 
   function persistUnlocked(): void {
-    storage.set(STORAGE_KEY_UNLOCKED, JSON.stringify([...unlockedIds]));
+    persistData(STORAGE_KEY_UNLOCKED, JSON.stringify([...unlockedIds]));
   }
 
   function persistProgress(): void {
-    storage.set(STORAGE_KEY_PROGRESS, JSON.stringify(progress));
+    persistData(STORAGE_KEY_PROGRESS, JSON.stringify(progress));
   }
 
   function persistItems(): void {
     const serializable = Object.fromEntries(Object.entries(items).map(([k, v]) => [k, [...v]]));
-    storage.set(STORAGE_KEY_ITEMS, JSON.stringify(serializable));
+    persistData(STORAGE_KEY_ITEMS, JSON.stringify(serializable));
   }
 
   // --- Public API ---
 
   function unlock(id: TId): void {
     if (unlockedIds.has(id)) return;
+
+    // Verify stored unlocked data hasn't been tampered with before writing to it
+    if (!verifyStoredIntegrity(STORAGE_KEY_UNLOCKED)) {
+      config.onTamperDetected?.(STORAGE_KEY_UNLOCKED);
+      // persistUnlocked() below will overwrite tampered storage with authoritative in-memory state
+    }
+
     unlockedIds.add(id);
     toastQueue.push(id);
     persistUnlocked();
@@ -140,8 +201,11 @@ export function createAchievements<TId extends string>(
     items = {};
     toastQueue = [];
     storage.remove(STORAGE_KEY_UNLOCKED);
+    storage.remove(STORAGE_KEY_UNLOCKED + HASH_SUFFIX);
     storage.remove(STORAGE_KEY_PROGRESS);
+    storage.remove(STORAGE_KEY_PROGRESS + HASH_SUFFIX);
     storage.remove(STORAGE_KEY_ITEMS);
+    storage.remove(STORAGE_KEY_ITEMS + HASH_SUFFIX);
     notify();
   }
 
