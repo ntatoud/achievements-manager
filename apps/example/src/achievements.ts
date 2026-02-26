@@ -36,8 +36,8 @@ export const definitions = defineAchievements([
   {
     id: "scanner",
     label: "Network Scanner",
-    description: "Scanned 4 unique network nodes.",
-    maxProgress: 4,
+    description: "Scanned 2 unique network nodes.",
+    maxProgress: 2,
   },
   {
     id: "full-coverage",

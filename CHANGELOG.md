@@ -9,6 +9,11 @@
 - **`setMaxProgress(id, max)`** — updates the effective `maxProgress` at runtime (in-memory only). Re-evaluates current progress immediately to trigger auto-unlock if the threshold is already met. Enables achievements whose total is only known at runtime (e.g. server-driven counts).
 - **`reset()`** now also clears `items` state and removes the `"items"` storage key.
 
+### Bug Fixes
+
+- **`useEngineState`** — removed `selector` from the `useEffect` dependency array. Inline selector functions are recreated on every render; having them as a dependency caused the effect to re-run each render, which called `setValue` with a new reference-type value (e.g. the `toastQueue` array), triggering another render — an infinite loop. The selector is now stored in a ref so the effect only re-runs when `engine` changes.
+- **`useAchievementToast`** — replaced `engine.dismissToast.bind(engine)` with `engine.dismissToast`. The `bind` call created a new function object on every render, making `dismiss` an unstable `useEffect` dependency in consumers (e.g. `Toast`) and causing the dismiss timer to reset on every render.
+
 ## 0.1.0 (2026-02-25)
 
 ### Features
