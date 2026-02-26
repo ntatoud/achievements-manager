@@ -7,8 +7,8 @@
     "test": "pnpm -r test",
     "lint": "oxlint packages",
     "lint:fix": "oxlint --fix packages",
-    "format": "oxfmt packages",
-    "format:check": "oxfmt --check packages",
+    "format": "oxfmt packages '!**/dist/**'",
+    "format:check": "oxfmt --check packages '!**/dist/**'",
     "dev:example": "pnpm --filter example dev"
   },
   "pnpm": {
