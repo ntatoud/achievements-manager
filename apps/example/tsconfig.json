@@ -4,6 +4,7 @@
     "jsx": "react-jsx",
     "noEmit": true,
     "paths": {
+      "@/*": ["./src/*"],
       "achievements": ["../../packages/core/src/index.ts"],
       "achievements-react": ["../../packages/react/src/index.ts"]
     }

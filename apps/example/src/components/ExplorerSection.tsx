@@ -1,5 +1,7 @@
 import { useState } from "react";
 import { useAchievements, useIsUnlocked, useProgress } from "../achievements";
+import { Button } from "./ui/button";
+import { cn } from "@/lib/utils";
 
 const MODULES = [
   { id: "core", label: "core", desc: "Engine · types · factory" },
@@ -38,23 +40,20 @@ export function ExplorerSection() {
         {MODULES.map((mod) => {
           const done = visited.has(mod.id);
           return (
-            <button
+            <Button
               key={mod.id}
-              className={[
-                "p-4 flex flex-col gap-1.5 text-left rounded-xl border transition-all duration-150",
-                done || unlocked
-                  ? "border-accent-mid bg-accent-dim cursor-default"
-                  : "border-edge bg-surface cursor-pointer hover:border-edge-bright hover:bg-well",
-              ].join(" ")}
+              variant={done || unlocked ? "accent" : "outline"}
+              className={cn(
+                "h-auto p-4 flex flex-col items-start gap-1.5",
+                !(done || unlocked) && "hover:bg-well"
+              )}
               onClick={() => visit(mod.id)}
               disabled={done || unlocked}
             >
-              <span
-                className={`font-mono text-[13px] ${done ? "text-accent" : "text-bright"}`}
-              >
-                {mod.label}
+              <span className="font-mono text-[13px]">{mod.label}</span>
+              <span className="text-[11px] text-faint leading-snug font-normal">
+                {mod.desc}
               </span>
-              <span className="text-[11px] text-faint leading-snug">{mod.desc}</span>
               <span
                 className={`font-mono text-[10px] mt-1 tracking-wide ${
                   done ? "text-accent-mid" : "text-faint"
@@ -62,7 +61,7 @@ export function ExplorerSection() {
               >
                 {done ? "✓ visited" : "→ visit"}
               </span>
-            </button>
+            </Button>
           );
         })}
       </div>

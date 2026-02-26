@@ -23,6 +23,27 @@
   --color-bright: #c8dcea;
   --color-faint:  #3a5060;
   --color-code:   #5bc8a0;
+
+  /* shadcn semantic mappings */
+  --color-background:            #0b0f12;
+  --color-foreground:            #c8dcea;
+  --color-card:                  #0b0f12;
+  --color-card-foreground:       #c8dcea;
+  --color-popover:               #111820;
+  --color-popover-foreground:    #c8dcea;
+  --color-primary:               #3dffb0;
+  --color-primary-foreground:    #06080a;
+  --color-secondary:             #111820;
+  --color-secondary-foreground:  #8aa0b4;
+  --color-muted:                 #111820;
+  --color-muted-foreground:      #3a5060;
+  --color-accent-foreground:     #06080a;
+  --color-destructive:           #ef4444;
+  --color-destructive-foreground: #fafafa;
+  --color-border:                #1c2a38;
+  --color-input:                 #1c2a38;
+  --color-ring:                  #27a86d;
+  --radius:                      0.75rem;
 }
 
 html, body, #root {

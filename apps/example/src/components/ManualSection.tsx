@@ -1,5 +1,6 @@
 import { useAchievements, useIsUnlocked } from "../achievements";
 import type { AchievementId } from "../achievements";
+import { Button } from "./ui/button";
 
 type TriggerProps = {
   id: AchievementId;
@@ -11,14 +12,9 @@ function ManualTrigger({ id, desc }: TriggerProps) {
   const unlocked = useIsUnlocked(id);
 
   return (
-    <button
-      className={[
-        "grid [grid-template-columns:1fr_auto] [grid-template-rows:auto_auto] gap-x-4 gap-y-0.5",
-        "px-5 py-4 text-left rounded-xl border transition-all duration-150 max-w-[480px]",
-        unlocked
-          ? "border-accent-mid bg-accent-dim cursor-default"
-          : "border-edge bg-surface cursor-pointer hover:border-edge-bright hover:bg-well",
-      ].join(" ")}
+    <Button
+      variant={unlocked ? "accent" : "outline"}
+      className="grid [grid-template-columns:1fr_auto] [grid-template-rows:auto_auto] gap-x-4 gap-y-0.5 h-auto px-5 py-4 text-left max-w-[480px]"
       onClick={() => unlock(id)}
       disabled={unlocked}
     >
@@ -29,7 +25,9 @@ function ManualTrigger({ id, desc }: TriggerProps) {
       >
         {id}
       </code>
-      <span className="text-[12px] text-faint col-start-1 row-start-2">{desc}</span>
+      <span className="text-[12px] text-faint col-start-1 row-start-2 font-normal">
+        {desc}
+      </span>
       <span
         className={`font-mono text-[10px] col-start-2 row-span-2 self-center whitespace-nowrap tracking-wide ${
           unlocked ? "text-accent-mid" : "text-faint"
@@ -37,7 +35,7 @@ function ManualTrigger({ id, desc }: TriggerProps) {
       >
         {unlocked ? "✓ unlocked" : "→ trigger"}
       </span>
-    </button>
+    </Button>
   );
 }
 

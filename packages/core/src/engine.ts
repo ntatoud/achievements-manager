@@ -73,37 +73,35 @@ export function createAchievements<TId extends string>(
   /**
    * Load a persisted field from storage, verifying its integrity hash.
    * If the hash is present but doesn't match, the data has been tampered with:
-   * onTamperDetected is fired, the corrupted entry is wiped, and the fallback
-   * value is returned so the engine starts from a clean state.
+   * onTamperDetected is fired and the fallback value is returned.
+   * Actual storage removal is deferred — if any field fails, all three keys
+   * are wiped together after hydration to guarantee a fully consistent clean state.
    */
-  function hydrateField<T>(key: string, parse: (raw: string) => T, fallback: T): T {
+  function hydrateField<T>(key: string, parse: (raw: string) => T, fallback: T): [T, boolean] {
     try {
       const raw = storage.get(key);
-      if (!raw) return fallback;
+      if (!raw) return [fallback, false];
       if (!verifyStoredIntegrity(key)) {
         config.onTamperDetected?.(key);
-        removeData(key);
-        return fallback;
+        return [fallback, true];
       }
-      return parse(raw);
+      return [parse(raw), false];
     } catch {
-      return fallback;
+      return [fallback, false];
     }
   }
 
-  unlockedIds = hydrateField(
+  const [hydratedUnlocked, unlockedTampered] = hydrateField(
     STORAGE_KEY_UNLOCKED,
     (raw) => new Set<TId>(JSON.parse(raw) as TId[]),
     new Set<TId>(),
   );
-
-  progress = hydrateField(
+  const [hydratedProgress, progressTampered] = hydrateField(
     STORAGE_KEY_PROGRESS,
     (raw) => JSON.parse(raw) as Record<string, number>,
     {},
   );
-
-  items = hydrateField(
+  const [hydratedItems, itemsTampered] = hydrateField(
     STORAGE_KEY_ITEMS,
     (raw) => {
       const parsed = JSON.parse(raw) as Record<string, string[]>;
@@ -111,6 +109,22 @@ export function createAchievements<TId extends string>(
     },
     {},
   );
+
+  // If any field was tampered, wipe ALL storage so the next load starts from
+  // a fully consistent clean slate — no partial state (e.g. items gone but
+  // progress still showing stale values).
+  if (unlockedTampered || progressTampered || itemsTampered) {
+    removeData(STORAGE_KEY_UNLOCKED);
+    removeData(STORAGE_KEY_PROGRESS);
+    removeData(STORAGE_KEY_ITEMS);
+    unlockedIds = new Set<TId>();
+    progress = {};
+    items = {};
+  } else {
+    unlockedIds = hydratedUnlocked;
+    progress = hydratedProgress;
+    items = hydratedItems;
+  }
 
   toastQueue = [];
 

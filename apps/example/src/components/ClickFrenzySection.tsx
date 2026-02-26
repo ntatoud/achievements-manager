@@ -1,5 +1,6 @@
 import { useAchievements, useIsUnlocked, useProgress } from "../achievements";
-import { ProgressBar } from "./ProgressBar";
+import { Progress } from "./ui/progress";
+import { Button } from "./ui/button";
 
 export function ClickFrenzySection() {
   const { incrementProgress } = useAchievements();
@@ -22,30 +23,22 @@ export function ClickFrenzySection() {
       </p>
 
       <div className="flex items-center gap-5 flex-wrap">
-        <button
-          className={[
-            "min-w-[120px] px-7 py-3.5 flex flex-col items-center gap-1",
-            "bg-well border rounded-xl transition-all duration-150",
-            unlocked
-              ? "border-accent-mid bg-accent-dim cursor-default"
-              : "border-edge-bright cursor-pointer hover:border-accent-mid hover:bg-accent-dim active:scale-95",
-          ].join(" ")}
+        <Button
+          variant={unlocked ? "accent" : "outline"}
+          size="lg"
+          className="min-w-[120px] flex-col gap-1 h-auto py-3.5"
           onClick={() => incrementProgress("click-frenzy")}
           disabled={unlocked}
         >
-          <span
-            className={`font-mono text-[14px] tracking-[0.12em] ${
-              unlocked ? "text-accent" : "text-bright"
-            }`}
-          >
+          <span className="tracking-[0.12em]">
             {unlocked ? "COMPLETE" : "CLICK"}
           </span>
-          <span className="font-mono text-[11px] text-faint">
+          <span className="text-[11px] font-normal opacity-70">
             {progress}&thinsp;/&thinsp;{max}
           </span>
-        </button>
+        </Button>
 
-        <ProgressBar value={progress} max={max} className="flex-1 min-w-[160px] h-1!" />
+        <Progress value={(progress / max) * 100} className="flex-1 min-w-[160px] h-1!" />
       </div>
     </section>
   );
