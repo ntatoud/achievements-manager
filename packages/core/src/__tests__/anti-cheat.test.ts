@@ -18,7 +18,11 @@ function makeAdapter() {
 }
 
 function makeEngine(storage = makeAdapter(), onTamperDetected?: (key: string) => void) {
-  return createAchievements({ definitions, storage, onTamperDetected });
+  return createAchievements({
+    definitions,
+    storage,
+    ...(onTamperDetected && { onTamperDetected }),
+  });
 }
 
 describe("fnv1aHashAdapter", () => {
