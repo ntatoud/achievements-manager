@@ -1,5 +1,19 @@
 # Changelog
 
+## 0.3.0 (2026-02-27)
+
+### Features
+
+- **Anti-cheat system** — pluggable `HashAdapter` interface for tamper detection. Pass a `hashAdapter` to `createAchievements` / `createAchievementsFactory` to sign and verify stored state. A built-in `WebCryptoHashAdapter` (HMAC-SHA-256) is provided out of the box. When tamper is detected, `onTamperDetected` fires with the offending key.
+
+### Bug Fixes
+
+- **Anti-cheat item restoration** — when any storage field fails integrity verification, all three keys (`unlocked`, `progress`, `items`) are now wiped atomically after hydration instead of individually. This prevents partial state (e.g. items cleared but stale progress remaining) after a tamper event.
+
+### Docs
+
+- Added comprehensive README for `achievements` (core) and `achievements-react` packages, and the root monorepo.
+
 ## 0.2.0 (2026-02-26)
 
 ### Features
