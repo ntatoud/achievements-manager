@@ -5,6 +5,7 @@ import { AppHeader } from "./components/AppHeader";
 import { ClickFrenzySection } from "./components/ClickFrenzySection";
 import { ExplorerSection } from "./components/ExplorerSection";
 import { ManualSection } from "./components/ManualSection";
+import { CollectorSection } from "./components/CollectorSection";
 import { Toast } from "./components/Toast";
 
 // ─── Session init (runs once on mount) ───────────────────────────────────────
@@ -38,6 +39,7 @@ function Layout() {
         <ClickFrenzySection />
         <ExplorerSection />
         <ManualSection />
+        <CollectorSection />
       </main>
 
       <Toast />

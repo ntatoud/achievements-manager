@@ -22,6 +22,11 @@ const definitions = [
     description: "Secret achievement",
     hidden: true,
   },
+  {
+    id: "no-static-max",
+    label: "No Static Max",
+    description: "Max is set at runtime",
+  },
 ] as const;
 
 function makeEngine(storage = inMemoryAdapter()) {
@@ -140,7 +145,14 @@ describe("reset()", () => {
     expect(state.toastQueue).toHaveLength(0);
   });
 
-  it("calls storage.remove() for unlocked and progress keys", () => {
+  it("clears collected items", () => {
+    const engine = makeEngine();
+    engine.collectItem("progress-many", "item-a");
+    engine.reset();
+    expect(engine.getItems("progress-many").size).toBe(0);
+  });
+
+  it("calls storage.remove() for unlocked, progress, and items keys", () => {
     const adapter = inMemoryAdapter();
     const removeSpy = vi.spyOn(adapter, "remove");
     const engine = createAchievements({
@@ -151,6 +163,7 @@ describe("reset()", () => {
     engine.reset();
     expect(removeSpy).toHaveBeenCalledWith("unlocked");
     expect(removeSpy).toHaveBeenCalledWith("progress");
+    expect(removeSpy).toHaveBeenCalledWith("items");
   });
 
   it("notifies subscribers after reset", () => {
@@ -189,6 +202,88 @@ describe("hydration from storage", () => {
     });
     expect(engine.isUnlocked("basic")).toBe(false);
     expect(engine.getProgress("progress-many")).toBe(0);
+  });
+});
+
+describe("collectItem()", () => {
+  it("tracks items and updates progress", () => {
+    const engine = makeEngine();
+    engine.collectItem("progress-many", "item-a");
+    expect(engine.getProgress("progress-many")).toBe(1);
+    engine.collectItem("progress-many", "item-b");
+    expect(engine.getProgress("progress-many")).toBe(2);
+  });
+
+  it("is idempotent — duplicate items do not increase progress", () => {
+    const engine = makeEngine();
+    engine.collectItem("progress-many", "item-a");
+    engine.collectItem("progress-many", "item-a");
+    expect(engine.getProgress("progress-many")).toBe(1);
+  });
+
+  it("auto-unlocks when collected items reach maxProgress", () => {
+    const engine = makeEngine();
+    engine.collectItem("progress-one", "item-a");
+    expect(engine.isUnlocked("progress-one")).toBe(true);
+  });
+
+  it("persists items across engine instances", () => {
+    const adapter = inMemoryAdapter();
+    const e1 = createAchievements({ definitions, storage: adapter });
+    e1.collectItem("progress-many", "item-a");
+    e1.collectItem("progress-many", "item-b");
+
+    const e2 = createAchievements({ definitions, storage: adapter });
+    expect(e2.getItems("progress-many").has("item-a")).toBe(true);
+    expect(e2.getItems("progress-many").has("item-b")).toBe(true);
+  });
+});
+
+describe("getItems()", () => {
+  it("returns the set of collected items", () => {
+    const engine = makeEngine();
+    engine.collectItem("progress-many", "slug-1");
+    engine.collectItem("progress-many", "slug-2");
+    const items = engine.getItems("progress-many");
+    expect(items.has("slug-1")).toBe(true);
+    expect(items.has("slug-2")).toBe(true);
+    expect(items.size).toBe(2);
+  });
+
+  it("returns an empty set for an id with no collected items", () => {
+    const engine = makeEngine();
+    expect(engine.getItems("progress-many").size).toBe(0);
+  });
+});
+
+describe("setMaxProgress()", () => {
+  it("updates the effective max and allows progress tracking", () => {
+    const engine = makeEngine();
+    engine.setMaxProgress("no-static-max", 3);
+    engine.setProgress("no-static-max", 2);
+    expect(engine.getProgress("no-static-max")).toBe(2);
+  });
+
+  it("auto-unlocks when current progress meets the new max", () => {
+    const engine = makeEngine();
+    engine.setProgress("progress-many", 5);
+    engine.setMaxProgress("progress-many", 5);
+    expect(engine.isUnlocked("progress-many")).toBe(true);
+  });
+
+  it("auto-unlocks for an achievement with no static maxProgress", () => {
+    const engine = makeEngine();
+    engine.setProgress("no-static-max", 0); // no-op without a max
+    engine.setMaxProgress("no-static-max", 1);
+    engine.setProgress("no-static-max", 1);
+    expect(engine.isUnlocked("no-static-max")).toBe(true);
+  });
+
+  it("clamps progress to the new max", () => {
+    const engine = makeEngine();
+    engine.setProgress("progress-many", 8);
+    engine.setMaxProgress("progress-many", 5);
+    expect(engine.getProgress("progress-many")).toBe(5);
   });
 });
 
