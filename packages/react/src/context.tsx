@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from "react";
 import type { AchievementEngine, AchievementState } from "achievements";
 
 const AchievementsContext = createContext<AchievementEngine<string> | null>(null);
@@ -31,11 +31,15 @@ export function useEngineState<TId extends string, T>(
   selector: (state: AchievementState<TId>) => T,
 ): T {
   const engine = useEngine<TId>();
+  const selectorRef = useRef(selector);
+  selectorRef.current = selector;
   const [value, setValue] = useState(() => selector(engine.getState() as AchievementState<TId>));
   useEffect(() => {
     // Sync in case state changed between render and effect
-    setValue(selector(engine.getState() as AchievementState<TId>));
-    return engine.subscribe((state) => setValue(selector(state as AchievementState<TId>)));
-  }, [engine, selector]);
+    setValue(selectorRef.current(engine.getState() as AchievementState<TId>));
+    return engine.subscribe((state) =>
+      setValue(selectorRef.current(state as AchievementState<TId>)),
+    );
+  }, [engine]);
   return value;
 }

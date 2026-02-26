@@ -33,5 +33,5 @@ export function useUnlockedCount<TId extends string>(): number {
 export function useAchievementToast<TId extends string>() {
   const engine = useEngine<TId>();
   const queue = useEngineState<TId, ReadonlyArray<TId>>((s) => s.toastQueue as TId[]);
-  return { queue, dismiss: engine.dismissToast.bind(engine) };
+  return { queue, dismiss: engine.dismissToast };
 }
